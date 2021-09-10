@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alura.jdbc.modelo.Categoria;
 import com.alura.jdbc.modelo.Producto;
 
 public class ProductoDAO {
@@ -23,13 +24,14 @@ public class ProductoDAO {
             PreparedStatement statement;
                 statement = con.prepareStatement(
                         "INSERT INTO PRODUCTO "
-                        + "(nombre, descripcion, cantidad)"
-                        + " VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+                        + "(nombre, descripcion, cantidad, categoria_id)"
+                        + " VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
     
             try (statement) {
                 statement.setString(1, producto.getNombre());
                 statement.setString(2, producto.getDescripcion());
                 statement.setInt(3, producto.getCantidad());
+                statement.setInt(4, producto.getCategoriaId());
     
                 statement.execute();
     
@@ -117,6 +119,40 @@ public class ProductoDAO {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<Producto> listar(Categoria categoria) {
+        List<Producto> resultado = new ArrayList<>();
+
+        try {
+            String sql = "SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD "
+            + " FROM PRODUCTO WHERE CATEGORIA_ID = ?";
+            System.out.println(sql);
+            
+            final PreparedStatement statement = con.prepareStatement(
+                    sql);
+    
+            try (statement) {
+                statement.setInt(1, categoria.getId());
+                statement.execute();
+    
+                final ResultSet resultSet = statement.getResultSet();
+    
+                try (resultSet) {
+                    while (resultSet.next()) {
+                        resultado.add(new Producto(
+                                resultSet.getInt("ID"),
+                                resultSet.getString("NOMBRE"),
+                                resultSet.getString("DESCRIPCION"),
+                                resultSet.getInt("CANTIDAD")));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return resultado;
     }
 
 }
